@@ -5,12 +5,12 @@ import os
 import gdown  # To download the model from Google Drive
 
 # Model file URL
-MODEL_URL = "https://drive.google.com/uc?id=13rUvQVsdwfAPGsMhJvxppPus3wagToOG"  # Use the correct file ID from your Google Drive
+MODEL_URL = "https://drive.google.com/uc?id=13rUvQVsdwfAPGsMhJvxppPus3wagToOG"  # Correct file ID from Google Drive
 
 # Function to download model from Google Drive
 def download_model():
     try:
-        model_path = '/mount/src/pdrs/trained_model.keras'  # Set an explicit path for the model
+        model_path = 'trained_model.keras'  # Relative path
         if not os.path.exists(model_path):
             gdown.download(MODEL_URL, model_path, quiet=False)
         else:
@@ -23,10 +23,10 @@ def model_prediction(test_image):
     if test_image is None:
         return None, "No image uploaded."
 
-    model_path = '/mount/src/pdrs/trained_model.keras'  # Explicit path for the model
+    model_path = 'trained_model.keras'  # Relative path for the model file
     try:
         if os.path.exists(model_path):
-            model = tf.keras.models.load_model(model_path)  # Load model from the explicit path
+            model = tf.keras.models.load_model(model_path)  # Load model from the relative path
         else:
             return None, f"Model file not found at {model_path}"
 
@@ -113,9 +113,12 @@ elif app_mode == "Disease Recognition":
         st.markdown(f'<img src="data:image/png;base64,{img_str}" class="uploaded-image"/>', unsafe_allow_html=True)
 
         if st.button("🔍 Predict Disease"):
-            model_path = '/mount/src/pdrs/trained_model.keras'  # Check for explicit model path
+            st.write(f"Current working directory: {os.getcwd()}")
+            st.write(f"Is the model file accessible? {os.path.exists('trained_model.keras')}")
+            
+            model_path = 'trained_model.keras'  # Check for explicit model path
             if not os.path.exists(model_path):
-                st.error("❌ Model file 'trained_model.keras' not found. Please make sure it's in the app directory.")
+                st.error(f"❌ Model file 'trained_model.keras' not found. Please make sure it's in the app directory.")
             else:
                 with st.spinner("🧠 Analyzing the image..."):
                     result_index, error = model_prediction(test_image)
