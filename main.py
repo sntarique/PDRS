@@ -5,15 +5,21 @@ import os
 import gdown
 import zipfile
 
-# Download model from Kaggle
+# Define model download URL from Kaggle
 MODEL_URL = 'https://www.kaggle.com/models/saiyednajibullah/pdrs/'
 
-# Replace this with your actual model URL from Kaggle
-MODEL_PATH = '/path/to/extracted/model/trained_model.keras'
+# Set the directory and model file path
+MODEL_DIR = './models'  # Folder to save the model
+MODEL_PATH = os.path.join(MODEL_DIR, 'trained_model.keras')
 
 # Function to download model from Kaggle
 def download_model():
     try:
+        # Ensure the model directory exists
+        if not os.path.exists(MODEL_DIR):
+            os.makedirs(MODEL_DIR)
+        
+        # Check if the model file already exists
         if not os.path.exists(MODEL_PATH):
             st.info("Downloading model from Kaggle...")
             gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
