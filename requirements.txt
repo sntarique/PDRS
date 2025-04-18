@@ -2,3 +2,4 @@ streamlit
 tensorflow>=2.17.1  # or the version that works for Streamlit Cloud
 numpy
 pillow
+gdown
