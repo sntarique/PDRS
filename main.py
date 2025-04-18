@@ -4,7 +4,7 @@ import numpy as np
 import os
 import gdown
 
-# Model file URL
+# Model file URL and path
 MODEL_URL = "https://drive.google.com/uc?export=download&id=13rUvQVsdwfAPGsMhJvxppPus3wagToOG"
 OUTPUT_PATH = 'trained_model.keras'
 
@@ -23,9 +23,19 @@ def download_model():
 def model_prediction(test_image):
     if test_image is None:
         return None, "No image uploaded."
-    
+
+    # Check if model exists
     if not os.path.exists(OUTPUT_PATH):
         return None, f"Model file '{OUTPUT_PATH}' not found. Please ensure it's in the app directory."
+
+    # Check current working directory
+    st.write(f"Current working directory: {os.getcwd()}")  # Debugging current working directory
+
+    # Verify model file location
+    if os.path.exists(OUTPUT_PATH):
+        st.success(f"Model file found at: {OUTPUT_PATH}")
+    else:
+        st.error(f"Model file not found at: {OUTPUT_PATH}")
 
     try:
         model = tf.keras.models.load_model(OUTPUT_PATH)
