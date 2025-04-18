@@ -2,7 +2,20 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 import os
-import gdown
+import gdown  # To download the model from Google Drive
+
+# Model file URL
+MODEL_URL = "https://drive.google.com/uc?id=13rUvQVsdwfAPGsMhJvxppPus3wagToOG"  # Use the correct file ID from your Google Drive
+
+# Function to download model from Google Drive
+def download_model():
+    try:
+        if not os.path.exists('trained_model.keras'):
+            gdown.download(MODEL_URL, 'trained_model.keras', quiet=False)
+        else:
+            st.success("Model file already downloaded!")
+    except Exception as e:
+        st.error(f"Error downloading model: {str(e)}")
 
 # Tensorflow Model Prediction
 def model_prediction(test_image):
@@ -55,70 +68,29 @@ if app_mode == "Home":
     else:
         st.warning("⚠️ Image file 'home_page.jpeg' not found in the app directory.")
 
-    st.markdown("""Welcome to the Plant Disease Recognition System! 🌿🔍
-
-    Upload an image of a plant, and our system will analyze it to detect any signs of diseases.
-
-    ### How It Works
-    1. **Upload Image:** Go to the **Disease Recognition** page and upload an image of a plant.
-    2. **Analysis:** Our system will process the image.
-    3. **Results:** View the results and take informed action.
-
-    ### Why Choose Us?
-    - **Accuracy:** Advanced machine learning for detection.
-    - **User-Friendly:** Simple and intuitive UI.
-    - **Fast:** Get results in seconds!
-
-    ### Start Now
-    Click **Disease Recognition** on the sidebar.
-    """)
+    st.markdown("""Welcome to the Plant Disease Recognition System! 🌿🔍...""")
 
 # About Page
 elif app_mode == "About":
     st.header("About")
-    st.markdown("""#### Dataset Info
-    This dataset contains about 87,000 RGB images of healthy and diseased crop leaves, categorized into 38 classes.
-
-    - **Train:** 70,295 images  
-    - **Validation:** 17,572 images  
-    - **Test:** 33 images
-
-    The dataset was augmented and structured for efficient model training and testing.
-    """)
+    st.markdown("""#### Dataset Info ...""")
 
 # Disease Recognition Page
 elif app_mode == "Disease Recognition":
+    # Download the model if not already downloaded
+    download_model()
+
     # Custom CSS for title and subtitle
     st.markdown("""
         <style>
-            .title {
-                font-size: 40px;
-                font-weight: bold;
-                color: #2E8B57;
-                margin-bottom: 0.5rem;
-            }
-            .subtitle {
-                font-size: 20px;
-               margin-bottom: 1.5rem;
-            }
-            .uploaded-image {
-                width: 70%;  /* Show image at 70% size */
-                margin: 0 auto;
-                display: block;
-                border-radius: 10px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            }
+            .title { font-size: 40px; font-weight: bold; color: #2E8B57; margin-bottom: 0.5rem; }
+            .subtitle { font-size: 20px; margin-bottom: 1.5rem; }
+            .uploaded-image { width: 70%; margin: 0 auto; display: block; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
         </style>
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="title">🌿 Plant Disease Recognition System</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">Upload a leaf image to detect disease</div>', unsafe_allow_html=True)
-
-    # Check if the model exists; if not, download it
-    if not os.path.exists('trained_model.keras'):
-        st.info("Downloading model from Google Drive...")
-        model_url = 'https://drive.google.com/uc?export=download&id=13rUvQVsdwfAPGsMhJvxppPus3wagToOG'
-        gdown.download(model_url, 'trained_model.keras', quiet=False)
 
     test_image = st.file_uploader("🖼️ Upload an Image:", type=["jpg", "jpeg", "png"])
 
