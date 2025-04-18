@@ -2,14 +2,7 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 import os
-import base64
-from PIL import Image
-import io
-
-# ✅ Cache model loading to avoid reloading on each prediction
-@st.cache_resource
-def load_model():
-    return tf.keras.models.load_model('trained_model.keras')
+import gdown
 
 # Tensorflow Model Prediction
 def model_prediction(test_image):
@@ -17,7 +10,7 @@ def model_prediction(test_image):
         return None, "No image uploaded."
 
     try:
-        model = load_model()
+        model = tf.keras.models.load_model('trained_model.keras')
     except (IOError, OSError, ValueError) as e:
         return None, f"Error loading model: {str(e)}"
 
@@ -62,8 +55,7 @@ if app_mode == "Home":
     else:
         st.warning("⚠️ Image file 'home_page.jpeg' not found in the app directory.")
 
-    st.markdown("""
-    Welcome to the Plant Disease Recognition System! 🌿🔍
+    st.markdown("""Welcome to the Plant Disease Recognition System! 🌿🔍
 
     Upload an image of a plant, and our system will analyze it to detect any signs of diseases.
 
@@ -84,8 +76,7 @@ if app_mode == "Home":
 # About Page
 elif app_mode == "About":
     st.header("About")
-    st.markdown("""
-    #### Dataset Info
+    st.markdown("""#### Dataset Info
     This dataset contains about 87,000 RGB images of healthy and diseased crop leaves, categorized into 38 classes.
 
     - **Train:** 70,295 images  
@@ -108,10 +99,10 @@ elif app_mode == "Disease Recognition":
             }
             .subtitle {
                 font-size: 20px;
-                margin-bottom: 1.5rem;
+               margin-bottom: 1.5rem;
             }
             .uploaded-image {
-                width: 70%;
+                width: 70%;  /* Show image at 70% size */
                 margin: 0 auto;
                 display: block;
                 border-radius: 10px;
@@ -123,10 +114,20 @@ elif app_mode == "Disease Recognition":
     st.markdown('<div class="title">🌿 Plant Disease Recognition System</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">Upload a leaf image to detect disease</div>', unsafe_allow_html=True)
 
+    # Check if the model exists; if not, download it
+    if not os.path.exists('trained_model.keras'):
+        st.info("Downloading model from Google Drive...")
+        model_url = 'https://drive.google.com/uc?export=download&id=13rUvQVsdwfAPGsMhJvxppPus3wagToOG'
+        gdown.download(model_url, 'trained_model.keras', quiet=False)
+
     test_image = st.file_uploader("🖼️ Upload an Image:", type=["jpg", "jpeg", "png"])
 
     if test_image:
-        # Show uploaded image nicely
+        # Display resized image using HTML
+        import base64
+        from PIL import Image
+        import io
+
         image = Image.open(test_image)
         buffered = io.BytesIO()
         image.save(buffered, format="PNG")
@@ -144,4 +145,3 @@ elif app_mode == "Disease Recognition":
                         st.error(f"🚫 Error: {error}")
                     else:
                         st.success(f"✅ The model predicts: **{class_name[result_index]}**")
-
