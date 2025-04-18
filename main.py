@@ -2,6 +2,14 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 import os
+import base64
+from PIL import Image
+import io
+
+# ✅ Cache model loading to avoid reloading on each prediction
+@st.cache_resource
+def load_model():
+    return tf.keras.models.load_model('trained_model.keras')
 
 # Tensorflow Model Prediction
 def model_prediction(test_image):
@@ -9,7 +17,7 @@ def model_prediction(test_image):
         return None, "No image uploaded."
 
     try:
-        model = tf.keras.models.load_model('trained_model.keras')
+        model = load_model()
     except (IOError, OSError, ValueError) as e:
         return None, f"Error loading model: {str(e)}"
 
@@ -100,11 +108,10 @@ elif app_mode == "Disease Recognition":
             }
             .subtitle {
                 font-size: 20px;
-              
                 margin-bottom: 1.5rem;
             }
             .uploaded-image {
-                width: 70%;  /* Show image at 70% size */
+                width: 70%;
                 margin: 0 auto;
                 display: block;
                 border-radius: 10px;
@@ -119,11 +126,7 @@ elif app_mode == "Disease Recognition":
     test_image = st.file_uploader("🖼️ Upload an Image:", type=["jpg", "jpeg", "png"])
 
     if test_image:
-        # Display resized image using HTML
-        import base64
-        from PIL import Image
-        import io
-
+        # Show uploaded image nicely
         image = Image.open(test_image)
         buffered = io.BytesIO()
         image.save(buffered, format="PNG")
@@ -141,3 +144,4 @@ elif app_mode == "Disease Recognition":
                         st.error(f"🚫 Error: {error}")
                     else:
                         st.success(f"✅ The model predicts: **{class_name[result_index]}**")
+
