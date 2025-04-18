@@ -25,7 +25,7 @@ def download_kaggle_json():
 def download_model_from_kaggle():
     if not os.path.exists("trained_model.keras"):
         download_kaggle_json()
-        os.system("kaggle models download saiyednajibullah/pdrss -p .")
+        os.system("kaggle models download saiyednajibullah/pdrs -p .")
         zip_path = "pdrss.zip"
         if os.path.exists(zip_path):
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
