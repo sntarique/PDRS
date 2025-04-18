@@ -6,7 +6,7 @@ import gdown
 import zipfile
 
 # Define model download URL from Kaggle
-MODEL_URL = 'https://www.kaggle.com/models/saiyednajibullah/pdrs/'
+MODEL_URL = 'https://drive.google.com/uc?export=download&id=13rUvQVsdwfAPGsMhJvxppPus3wagToOG'
 
 # Set the directory and model file path
 MODEL_DIR = './models'  # Folder to save the model
@@ -15,18 +15,19 @@ MODEL_PATH = os.path.join(MODEL_DIR, 'trained_model.keras')
 # Function to download model from Kaggle
 def download_model():
     try:
-        # Ensure the model directory exists
         if not os.path.exists(MODEL_DIR):
-            os.makedirs(MODEL_DIR)
-        
-        # Check if the model file already exists
+            os.makedirs(MODEL_DIR)  # Create the directory if it doesn't exist
+
+        print(f"Saving model to {MODEL_PATH}")
+
         if not os.path.exists(MODEL_PATH):
-            st.info("Downloading model from Kaggle...")
+            print("Downloading model...")
             gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+            print("Model downloaded successfully.")
         else:
-            st.success("Model file already downloaded!")
+            print("Model file already exists!")
     except Exception as e:
-        st.error(f"Error downloading model: {str(e)}")
+        print(f"Error downloading model: {str(e)}")
 
 # Tensorflow Model Prediction
 def model_prediction(test_image):
@@ -35,6 +36,7 @@ def model_prediction(test_image):
 
     try:
         model = tf.keras.models.load_model(MODEL_PATH)
+        print("Model loaded successfully.")
     except (IOError, OSError, ValueError) as e:
         return None, f"Error loading model: {str(e)}"
 
