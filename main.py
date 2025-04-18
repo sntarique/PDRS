@@ -2,51 +2,40 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 import os
-import base64
-import io
+import gdown
 import zipfile
-from PIL import Image
-import requests
 
-# Download kaggle.json from GitHub
-def download_kaggle_json():
-    kaggle_json_url = "https://raw.githubusercontent.com/sntarique/PDRS/kaggle.json"
-    response = requests.get(kaggle_json_url)
-    if response.status_code == 200:
-        os.makedirs(os.path.expanduser("~/.kaggle"), exist_ok=True)
-        with open(os.path.expanduser("~/.kaggle/kaggle.json"), "wb") as f:
-            f.write(response.content)
-        os.chmod(os.path.expanduser("~/.kaggle/kaggle.json"), 0o600)
-        st.success("✅ Kaggle API key downloaded and saved.")
-    else:
-        st.error("🚫 Failed to download kaggle.json")
+# Download model from Kaggle
+MODEL_URL = 'https://www.kaggle.com/models/saiyednajibullah/pdrs/'
 
-# Download the model from Kaggle
-def download_model_from_kaggle():
-    if not os.path.exists("trained_model.keras"):
-        download_kaggle_json()
-        os.system("kaggle models download saiyednajibullah/pdrs -p .")
-        zip_path = "pdrss.zip"
-        if os.path.exists(zip_path):
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall()
-            st.success("✅ Model downloaded and extracted from Kaggle.")
+# Replace this with your actual model URL from Kaggle
+MODEL_PATH = '/path/to/extracted/model/trained_model.keras'
+
+# Function to download model from Kaggle
+def download_model():
+    try:
+        if not os.path.exists(MODEL_PATH):
+            st.info("Downloading model from Kaggle...")
+            gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
         else:
-            st.error("🚫 Model zip file not found after Kaggle download.")
-    else:
-        st.success("✅ Model already exists.")
+            st.success("Model file already downloaded!")
+    except Exception as e:
+        st.error(f"Error downloading model: {str(e)}")
 
 # Tensorflow Model Prediction
 def model_prediction(test_image):
+    if test_image is None:
+        return None, "No image uploaded."
+
     try:
-        model = tf.keras.models.load_model('trained_model.keras')
-    except Exception as e:
+        model = tf.keras.models.load_model(MODEL_PATH)
+    except (IOError, OSError, ValueError) as e:
         return None, f"Error loading model: {str(e)}"
 
     try:
         image = tf.keras.preprocessing.image.load_img(test_image, target_size=(128, 128))
         input_arr = tf.keras.preprocessing.image.img_to_array(image)
-        input_arr = np.expand_dims(input_arr, axis=0)
+        input_arr = np.expand_dims(input_arr, axis=0)  # Convert single image to a batch
         prediction = model.predict(input_arr)
         result_index = np.argmax(prediction)
         return result_index, None
@@ -77,33 +66,59 @@ app_mode = st.sidebar.selectbox("Select Page", ["Home", "About", "Disease Recogn
 # Home Page
 if app_mode == "Home":
     st.header("PLANT DISEASE RECOGNITION SYSTEM")
-    st.markdown("Welcome to the Plant Disease Recognition System! 🌿🔍 ...")
+    image_path = "home_page.jpeg"
+
+    if os.path.exists(image_path):
+        st.image(image_path)
+    else:
+        st.warning("⚠️ Image file 'home_page.jpeg' not found in the app directory.")
+
+    st.markdown("""Welcome to the Plant Disease Recognition System! 🌿🔍...""")
 
 # About Page
 elif app_mode == "About":
     st.header("About")
-    st.markdown("#### Dataset Info ...")
+    st.markdown("""#### Dataset Info ...""")
 
 # Disease Recognition Page
 elif app_mode == "Disease Recognition":
-    download_model_from_kaggle()
+    # Download the model if not already downloaded
+    download_model()
 
-    st.markdown('<h1 style="color:#2E8B57;">🌿 Plant Disease Recognition System</h1>', unsafe_allow_html=True)
-    st.subheader("Upload a leaf image to detect disease")
+    # Custom CSS for title and subtitle
+    st.markdown("""
+        <style>
+            .title { font-size: 40px; font-weight: bold; color: #2E8B57; margin-bottom: 0.5rem; }
+            .subtitle { font-size: 20px; margin-bottom: 1.5rem; }
+            .uploaded-image { width: 70%; margin: 0 auto; display: block; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="title">🌿 Plant Disease Recognition System</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Upload a leaf image to detect disease</div>', unsafe_allow_html=True)
 
     test_image = st.file_uploader("🖼️ Upload an Image:", type=["jpg", "jpeg", "png"])
 
     if test_image:
+        # Display resized image using HTML
+        import base64
+        from PIL import Image
+        import io
+
         image = Image.open(test_image)
         buffered = io.BytesIO()
         image.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
-        st.markdown(f'<img src="data:image/png;base64,{img_str}" style="width:70%;border-radius:10px;"/>', unsafe_allow_html=True)
+        st.markdown(f'<img src="data:image/png;base64,{img_str}" class="uploaded-image"/>', unsafe_allow_html=True)
 
         if st.button("🔍 Predict Disease"):
-            with st.spinner("🧠 Analyzing the image..."):
-                result_index, error = model_prediction(test_image)
-                if error:
-                    st.error(f"🚫 Error: {error}")
-                else:
-                    st.success(f"✅ The model predicts: **{class_name[result_index]}**")
+            if not os.path.exists(MODEL_PATH):
+                st.error("❌ Model file 'trained_model.keras' not found. Please make sure it's in the app directory.")
+            else:
+                with st.spinner("🧠 Analyzing the image..."):
+                    result_index, error = model_prediction(test_image)
+
+                    if error:
+                        st.error(f"🚫 Error: {error}")
+                    else:
+                        st.success(f"✅ The model predicts: **{class_name[result_index]}**")
