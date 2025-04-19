@@ -9,14 +9,15 @@ def model_prediction(test_image):
         return None, "No image uploaded."
 
     try:
-        model = tf.keras.models.load_model('trained_model.keras')
+        model_path = os.path.join(os.path.dirname(__file__), 'trained_model.h5')
+        model = tf.keras.models.load_model(model_path)
     except (IOError, OSError, ValueError) as e:
         return None, f"Error loading model: {str(e)}"
 
     try:
         image = tf.keras.preprocessing.image.load_img(test_image, target_size=(128, 128))
         input_arr = tf.keras.preprocessing.image.img_to_array(image)
-        input_arr = np.expand_dims(input_arr, axis=0)  # Convert single image to a batch
+        input_arr = np.expand_dims(input_arr, axis=0)
         prediction = model.predict(input_arr)
         result_index = np.argmax(prediction)
         return result_index, None
@@ -100,11 +101,10 @@ elif app_mode == "Disease Recognition":
             }
             .subtitle {
                 font-size: 20px;
-              
                 margin-bottom: 1.5rem;
             }
             .uploaded-image {
-                width: 70%;  /* Show image at 70% size */
+                width: 70%;
                 margin: 0 auto;
                 display: block;
                 border-radius: 10px;
@@ -119,7 +119,6 @@ elif app_mode == "Disease Recognition":
     test_image = st.file_uploader("🖼️ Upload an Image:", type=["jpg", "jpeg", "png"])
 
     if test_image:
-        # Display resized image using HTML
         import base64
         from PIL import Image
         import io
@@ -131,8 +130,9 @@ elif app_mode == "Disease Recognition":
         st.markdown(f'<img src="data:image/png;base64,{img_str}" class="uploaded-image"/>', unsafe_allow_html=True)
 
         if st.button("🔍 Predict Disease"):
-            if not os.path.exists('trained_model.keras'):
-                st.error("❌ Model file 'trained_model.keras' not found. Please make sure it's in the app directory.")
+            model_path = os.path.join(os.path.dirname(__file__), 'trained_model.h5')
+            if not os.path.exists(model_path):
+                st.error("❌ Model file 'trained_model.h5' not found. Please make sure it's in the app directory.")
             else:
                 with st.spinner("🧠 Analyzing the image..."):
                     result_index, error = model_prediction(test_image)
