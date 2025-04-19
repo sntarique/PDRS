@@ -83,7 +83,7 @@ if st.session_state.app_mode == "Home":
     """)
 
     # Start Now Button
-    if st.button("Start Now"):
+    if st.button("🚀 Start Now"):
         st.session_state.app_mode = "Disease Recognition"
         st.rerun()
 
