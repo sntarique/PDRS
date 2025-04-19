@@ -35,7 +35,7 @@ class_name = [
     'Pepper,_bell___Bacterial_spot', 'Pepper,_bell___healthy', 'Potato___Early_blight',
     'Potato___Late_blight', 'Potato___healthy', 'Raspberry___healthy', 'Soybean___healthy',
     'Squash___Powdery_mildew', 'Strawberry___Leaf_scorch', 'Strawberry___healthy',
-    'Tomato___Bacterial_spot', ''avaient', 'Tomato___Late_blight',
+    'Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___Late_blight',
     'Tomato___Leaf_Mold', 'Tomato___Septoria_leaf_spot', 'Tomato___Spider_mites Two-spotted_spider_mite',
     'Tomato___Target_Spot', 'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus',
     'Tomato___healthy'
@@ -85,7 +85,6 @@ if st.session_state.app_mode == "Home":
     # Start Now Button
     if st.button("Start Now"):
         st.session_state.app_mode = "Disease Recognition"
-        # Force rerun to update the app with the new app_mode
         st.rerun()
 
 # About Page
