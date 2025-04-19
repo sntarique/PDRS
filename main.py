@@ -2,16 +2,24 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 import os
+from PIL import Image
+import io
+import base64
 
-# Tensorflow Model Prediction
+# Cache the model to prevent reloading on every prediction
+@st.cache_resource
+def load_model():
+    model_path = os.path.join(os.path.dirname(__file__), 'trained_model.h5')
+    return tf.keras.models.load_model(model_path)
+
+# Model Prediction Function
 def model_prediction(test_image):
     if test_image is None:
         return None, "No image uploaded."
 
     try:
-        model_path = os.path.join(os.path.dirname(__file__), 'trained_model.h5')
-        model = tf.keras.models.load_model(model_path)
-    except (IOError, OSError, ValueError) as e:
+        model = load_model()
+    except Exception as e:
         return None, f"Error loading model: {str(e)}"
 
     try:
@@ -20,9 +28,10 @@ def model_prediction(test_image):
         input_arr = np.expand_dims(input_arr, axis=0)
         prediction = model.predict(input_arr)
         result_index = np.argmax(prediction)
-        return result_index, None
+        confidence = float(np.max(prediction))
+        return result_index, confidence, None
     except Exception as e:
-        return None, f"Prediction error: {str(e)}"
+        return None, None, f"Prediction error: {str(e)}"
 
 # Class labels
 class_name = [
@@ -47,7 +56,8 @@ if 'app_mode' not in st.session_state:
 
 # Sidebar
 st.sidebar.title("Dashboard")
-app_mode = st.sidebar.selectbox("Select Page", ["Home", "About", "Disease Recognition"], index=["Home", "About", "Disease Recognition"].index(st.session_state.app_mode))
+app_mode = st.sidebar.selectbox("Select Page", ["Home", "About", "Disease Recognition"],
+                                index=["Home", "About", "Disease Recognition"].index(st.session_state.app_mode))
 
 # Update session state when sidebar selection changes
 if app_mode != st.session_state.app_mode:
@@ -77,12 +87,8 @@ if st.session_state.app_mode == "Home":
     - **Accuracy:** Advanced machine learning for detection.
     - **User-Friendly:** Simple and intuitive UI.
     - **Fast:** Get results in seconds!
-
-    ### Start Now
-    Click the button below to go to the **Disease Recognition** page.
     """)
 
-    # Start Now Button
     if st.button("🚀 Start Now"):
         st.session_state.app_mode = "Disease Recognition"
         st.rerun()
@@ -103,7 +109,6 @@ elif st.session_state.app_mode == "About":
 
 # Disease Recognition Page
 elif st.session_state.app_mode == "Disease Recognition":
-    # Custom CSS for title and subtitle
     st.markdown("""
         <style>
             .title {
@@ -132,25 +137,24 @@ elif st.session_state.app_mode == "Disease Recognition":
     test_image = st.file_uploader("🖼️ Upload an Image:", type=["jpg", "jpeg", "png"])
 
     if test_image:
-        import base64
-        from PIL import Image
-        import io
+        try:
+            image = Image.open(test_image)
+            image.verify()  # verify that it's a proper image file
+            image = Image.open(test_image)  # reopen after verify
+        except Exception:
+            st.error("❌ The uploaded file is not a valid image.")
+        else:
+            buffered = io.BytesIO()
+            image.save(buffered, format="PNG")
+            img_str = base64.b64encode(buffered.getvalue()).decode()
+            st.markdown(f'<img src="data:image/png;base64,{img_str}" class="uploaded-image"/>', unsafe_allow_html=True)
 
-        image = Image.open(test_image)
-        buffered = io.BytesIO()
-        image.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue()).decode()
-        st.markdown(f'<img src="data:image/png;base64,{img_str}" class="uploaded-image"/>', unsafe_allow_html=True)
-
-        if st.button("🔍 Predict Disease"):
-            model_path = os.path.join(os.path.dirname(__file__), 'trained_model.h5')
-            if not os.path.exists(model_path):
-                st.error("❌ Model file 'trained_model.h5' not found. Please make sure it's in the app directory.")
-            else:
+            if st.button("🔍 Predict Disease"):
                 with st.spinner("🧠 Analyzing the image..."):
-                    result_index, error = model_prediction(test_image)
+                    result_index, confidence, error = model_prediction(test_image)
 
                     if error:
                         st.error(f"🚫 Error: {error}")
                     else:
                         st.success(f"✅ The model predicts: **{class_name[result_index]}**")
+                        st.info(f"🧪 Confidence: **{confidence * 100:.2f}%**")
