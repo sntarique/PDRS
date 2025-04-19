@@ -2,32 +2,6 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 import os
-import gdown
-import zipfile
-
-# Define model download URL from Kaggle
-MODEL_URL = 'https://drive.google.com/uc?export=download&id=13rUvQVsdwfAPGsMhJvxppPus3wagToOG'
-
-# Set the directory and model file path
-MODEL_DIR = './models'  # Folder to save the model
-MODEL_PATH = os.path.join(MODEL_DIR, 'trained_model.keras')
-
-# Function to download model from Kaggle
-def download_model():
-    try:
-        if not os.path.exists(MODEL_DIR):
-            os.makedirs(MODEL_DIR)  # Create the directory if it doesn't exist
-
-        print(f"Saving model to {MODEL_PATH}")
-
-        if not os.path.exists(MODEL_PATH):
-            print("Downloading model...")
-            gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
-            print("Model downloaded successfully.")
-        else:
-            print("Model file already exists!")
-    except Exception as e:
-        print(f"Error downloading model: {str(e)}")
 
 # Tensorflow Model Prediction
 def model_prediction(test_image):
@@ -35,8 +9,7 @@ def model_prediction(test_image):
         return None, "No image uploaded."
 
     try:
-        model = tf.keras.models.load_model(MODEL_PATH)
-        print("Model loaded successfully.")
+        model = tf.keras.models.load_model('trained_model.keras')
     except (IOError, OSError, ValueError) as e:
         return None, f"Error loading model: {str(e)}"
 
@@ -81,24 +54,62 @@ if app_mode == "Home":
     else:
         st.warning("⚠️ Image file 'home_page.jpeg' not found in the app directory.")
 
-    st.markdown("""Welcome to the Plant Disease Recognition System! 🌿🔍...""")
+    st.markdown("""
+    Welcome to the Plant Disease Recognition System! 🌿🔍
+
+    Upload an image of a plant, and our system will analyze it to detect any signs of diseases.
+
+    ### How It Works
+    1. **Upload Image:** Go to the **Disease Recognition** page and upload an image of a plant.
+    2. **Analysis:** Our system will process the image.
+    3. **Results:** View the results and take informed action.
+
+    ### Why Choose Us?
+    - **Accuracy:** Advanced machine learning for detection.
+    - **User-Friendly:** Simple and intuitive UI.
+    - **Fast:** Get results in seconds!
+
+    ### Start Now
+    Click **Disease Recognition** on the sidebar.
+    """)
 
 # About Page
 elif app_mode == "About":
     st.header("About")
-    st.markdown("""#### Dataset Info ...""")
+    st.markdown("""
+    #### Dataset Info
+    This dataset contains about 87,000 RGB images of healthy and diseased crop leaves, categorized into 38 classes.
+
+    - **Train:** 70,295 images  
+    - **Validation:** 17,572 images  
+    - **Test:** 33 images
+
+    The dataset was augmented and structured for efficient model training and testing.
+    """)
 
 # Disease Recognition Page
 elif app_mode == "Disease Recognition":
-    # Download the model if not already downloaded
-    download_model()
-
     # Custom CSS for title and subtitle
     st.markdown("""
         <style>
-            .title { font-size: 40px; font-weight: bold; color: #2E8B57; margin-bottom: 0.5rem; }
-            .subtitle { font-size: 20px; margin-bottom: 1.5rem; }
-            .uploaded-image { width: 70%; margin: 0 auto; display: block; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+            .title {
+                font-size: 40px;
+                font-weight: bold;
+                color: #2E8B57;
+                margin-bottom: 0.5rem;
+            }
+            .subtitle {
+                font-size: 20px;
+              
+                margin-bottom: 1.5rem;
+            }
+            .uploaded-image {
+                width: 70%;  /* Show image at 70% size */
+                margin: 0 auto;
+                display: block;
+                border-radius: 10px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            }
         </style>
     """, unsafe_allow_html=True)
 
@@ -120,7 +131,7 @@ elif app_mode == "Disease Recognition":
         st.markdown(f'<img src="data:image/png;base64,{img_str}" class="uploaded-image"/>', unsafe_allow_html=True)
 
         if st.button("🔍 Predict Disease"):
-            if not os.path.exists(MODEL_PATH):
+            if not os.path.exists('trained_model.keras'):
                 st.error("❌ Model file 'trained_model.keras' not found. Please make sure it's in the app directory.")
             else:
                 with st.spinner("🧠 Analyzing the image..."):
